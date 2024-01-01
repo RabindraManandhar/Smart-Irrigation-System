@@ -1,0 +1,326 @@
+body {
+    background-color: lightblue;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: green;
+    color: black;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.logo img {
+    height: 30px;
+    margin-left: 20px;
+}
+
+.home {
+    position: relative;
+    background-color: green;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: green;
+    color: white;
+    padding: 5px;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.dropdown:hover .dropbtn {
+    display: none;
+}
+
+.dropdown-content {
+    display: none;
+}
+
+.dropdown:hover .dropdown-content {
+    display: inline-block;
+}
+
+.dropdown-content select {
+    width: 100%;
+    font-size: 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: none;
+    background-color: green;
+    color: white;
+    border-radius: 10px;
+}
+
+.dropdown-content select:focus {
+    outline: none;
+}
+
+.profile {
+    background-color: green;
+    color: white;
+    padding: 5px;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.statistics {
+    background-color: green;
+    color: white;
+    padding: 5px;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+#selectedProfile {
+    text-align: center;
+}
+
+.system-view {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+}
+
+.monitor {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.monitor img {
+    height: 100px;
+    margin: 10px;
+}
+
+.monitor span {
+    font-size: 24px;
+    margin: 10px;
+}
+
+.profile-view {
+    height: 50vh;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 0 10px green;
+    width: 40%;
+    margin-top: 5%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* .dropdown-list {
+    display: none;
+} */
+
+.profile-notification {
+    text-align: center;
+    font-size: 20px;
+    margin-top: 20px;
+    height: 40px;
+    position: relative;
+}
+
+.inline_element {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.left-element {
+    position: absolute;
+    left: 20px;    
+}
+
+#container {
+    display:flex;
+    justify-content: space-evenly;
+    padding: 20px;
+    height: 50vh;
+}
+
+#container > div {
+    background-color: lightblue;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 50%;
+}
+
+#date-input-container,
+#button-container,
+table {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.date-input {
+    width: 180px;
+}
+
+#button-container {
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#fetch-data-btn {
+    background-color: #4caf50; /* Green */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#button-container label {
+    margin-bottom: 20px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 20px;
+    margin-top: 10px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 15px;
+    width: 15px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #4caf50; /* Green */
+    color: white;
+    border-radius: 5px 5px 0 0; /* Rounded corners on top */
+}
+
+td {
+    background-color: lightblue;
+    border-radius: 0 0 5px 5px; /* Rounded corners on bottom */
+}
+
+#data-display {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#myChart {
+    width: 100%;
+    margin-top: 4%;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    background-color: green;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius:5px;
+    font-size: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#pumpButton {
+    background-color: green;
+    color: white;
+    border-radius: 2px;
+    border: none;
+    padding: 10px 40px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#pumpButton:hover {
+    background-color: darkgreen;
+    border-radius: 5px;
+}
+
+
+/* Additional Styles for Responsive Design (Optional) */
+/* @media only screen and (max-width: 600px) {
+    
+} */

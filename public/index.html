@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TeleFarm</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <div class=navbar>
+    <div class=logo>
+        <img src="placeholder.png" alt="Plant png">
+        <div>
+          <a href="http://localhost:3000" class="home">TeleFarm</a>
+        </div>
+    </div>
+    <div class="dropdown">
+        <button class="dropbtn">Profiles</button>
+        <div class="dropdown-content">
+          <select id="profileNames">
+          </select>
+        </div>
+    </div>
+    <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
+    <a href="http://localhost:3000/statistics" class="statistics">Statistics</a>
+</div>
+
+<div class="inline_element">
+  <h1 class="center-element" id="selectedProfile"></h1>
+</div><p id="error" style="color: red;"></p>
+<div class=system-view>
+    <div class=monitor>
+        <img src="tank.svg" alt="tank svg">
+        <span id="tankLevel"></span>
+
+        <img src="soil.svg" alt="soil svg">
+        <span id="soilMoisture"></span>
+
+        <img src="light.svg" alt="light svg">
+        <span id="lightLevel"></span>
+    </div>
+</div>
+<footer>
+    <button id="pumpButton">Pump it Up</button>
+</footer>
+
+<script>
+  'use strict'
+  const socket = new WebSocket('ws://localhost:3000')
+
+  document.getElementById('pumpButton').addEventListener('click', function() {
+
+    // Do fetch on the pump route when the pumpButton is pressed
+    fetch('/pump', { method: 'POST' })
+    .then(response => {
+      if (response.ok) {
+      } else {
+        console.error('Failed to trigger pump')
+      }
+    })
+    .catch(error => {
+      console.error('Error triggering pump:', error)
+    })
+  })
+
+  socket.onopen = function() {
+    console.log('WebSocket connected')
+  }
+
+  socket.onmessage = function(event) {
+    const data = JSON.parse(event.data)
+    if(data.errors != 0){
+      if(data.errors == 1){
+      document.querySelector('#error').textContent = 'Sensor error!!!'
+      }
+      else {
+      document.querySelector('#error').textContent = 'Water level too low!!!'
+      }
+    }
+    else {
+      document.getElementById('error').textContent = ''
+    }
+    document.getElementById('tankLevel').innerText = data.water + ' %'
+    document.getElementById('soilMoisture').innerText = data.moisture + ' %'
+    document.getElementById('lightLevel').innerText = data.light + ' Lux'
+  }
+  // Function to update select menu 
+  function updateSelectOptions() {
+    fetch('/selectData')
+        .then(response => response.json())
+        .then(data => {
+            const selectElement = document.getElementById('profileNames')
+            // Clear existing options
+            selectElement.innerHTML = ''
+
+            data.forEach(profile => {
+                const option = document.createElement('option')
+                option.value = profile.name
+                option.textContent = profile.name
+                selectElement.appendChild(option)
+            })
+        })
+        .catch(error => console.error(error))
+  }
+  // Run the function on page load
+  updateSelectOptions()
+  document.getElementById('profileNames').addEventListener('click', function() {
+      updateSelectOptions()
+  })
+  // Event for profile change on the select menu
+  document.getElementById('profileNames').addEventListener('change', function() {
+            const selectedName = document.getElementById('profileNames').value
+
+            fetch(`/profileData?name=${selectedName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const profile = data
+                })
+                .catch(error => console.error(error))
+                setTimeout(() => {
+                    updateSelectedProfile()
+                }, 100)
+        })
+  // Function to insert the current profile on the page
+  function updateSelectedProfile() {
+    fetch('/selectedProfile')
+        .then(response => response.json())
+        .then(data => {
+            const selectedProfile = document.getElementById('selectedProfile')
+            selectedProfile.textContent = data.name || 'No selected profile'
+        })
+        .catch(error => console.error(error))
+    }
+  // Run this function on page load
+  updateSelectedProfile()
+</script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+
+        <link rel="stylesheet" href="styles.css">
+        </head>
+        <body>
+          <div class=navbar>
+            <div class=logo>
+                <img src="placeholder.png" alt="Plant png">
+                <div>
+                  <a href="http://localhost:3000" class="home">TeleFarm</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn">Profiles</button>
+                <div class="dropdown-content">
+                  <select id="profileNames">
+                  </select>
+                </div>
+            </div>
+            <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
+            <a href="http://localhost:3000/statistics" class="statistics">Statistics</a>
+        </div>
+        <div class="inline_element">
+          <h1 class="left-element">Statistics</h1>
+          <h1 class="center-element" id="selectedProfile"></h1>
+      </div>
+    <p id="error" style="color: red;"></p>
+        <div id="container">
+            <div>
+
+                <div id="date-input-container">
+                    <label for="start-time">Start</label>
+                    <input type="datetime-local" name="start-time" id="start-time" class="date-input">
+                    <label for="end-time">End</label>
+                    <input type="datetime-local" name="end-time" id="end-time" class="date-input">
+                </div>
+
+                <div id="button-container">
+                    <button onclick="fetch_data()" id="fetch-data-btn">Get data</button>
+                    <div>
+                        <label for="live-data">Live</label>
+                        <label class="switch">
+                            <input type="checkbox" id="live-data" name="live-data" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <table>
+                    <tr>
+                        <th>Show</th>
+                        <th>Parameter</th>
+                        <th>Unit</th>
+                        <th>Axis</th>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="show-water" id="show-water" checked></td>
+                        <td>Water</td>
+                        <td>mL</td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="show-moisture" id="show-moisture" checked></td>
+                        <td>Moisture</td>
+                        <td>%</td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="show-light" id="show-light" checked></td>
+                        <td>Light</td>
+                        <td>Lux</td>
+                        <td>Left</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="data-display">
+                <canvas id="myChart"></canvas>
+            </div>
+
+        </div>
+
+
+    </body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script>
+        "use strict"
+
+const ctx = document.getElementById('myChart')
+const start_time = document.getElementById("start-time")
+const end_time = document.getElementById("end-time")
+const live_data = document.getElementById("live-data")
+
+let water = [0]
+let moisture = [0]
+let light = [0]
+let time_stamps = [new Date()]
+
+const url = "ws://localhost:3000"
+const mywsServer = new WebSocket(url)
+
+
+function reset_data(){
+    water = []
+    moisture = []
+    light = []
+    time_stamps = []
+}
+
+live_data.addEventListener("click", () => {
+  reset_data()
+    if(live_data.checked){
+        graph.data.datasets[0].data = water
+        graph.data.datasets[1].data = moisture
+        graph.data.datasets[2].data = light
+        graph.data.labels = time_stamps
+    }
+})
+
+let options1 = {
+  elements: {
+    point: {
+      radius: 0
+    }
+  },
+  scales: {
+    LEFT: {
+      type: 'linear',
+      position: 'left',
+      beginAtZero: true,
+      max: 130,
+      min: -20,
+      ticks: {
+        stepSize: 15,
+      }
+    },
+    RIGHT: {
+      type: 'linear',
+      position: 'right',
+      beginAtZero: true,
+      max: 5000,
+      ticks: {
+        stepSize: 500,
+      }
+    },
+    x: {
+      type: 'time',
+      time: {
+        displayFormats: {
+          'millisecond': 'MMM dd hh mm',
+          'second': 'MMM dd HH mm',
+          'minute': 'HH mm',
+          'hour': 'HH:mm',
+          'day': 'MMM dd HH mm',
+          'week': 'MMM dd HH mm',
+          'month': 'MMM dd HH mm',
+          'quarter': 'MMM dd HH mm',
+          'year': 'MMM dd HH mm',
+        }
+      },
+      ticks: {
+        major:{
+          enabled: true
+        },
+        autoSkip: true,
+        maxTicksLimit: 20
+
+      }
+    }
+  },
+  animation: {
+    duration: 0
+  }
+}
+
+// Defining graph
+let graph = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: time_stamps,
+    datasets: [
+      {
+        label: "Water",
+        data: water,
+        borderWidth: 2,
+        yAxisID: "LEFT",
+      },
+      {
+        label: "Moisture",
+        data: moisture,
+        borderWidth: 2,
+        yAxisID: "LEFT",
+      },
+      {
+        label: "Light",
+        data: light,
+        borderWidth: 2,
+        yAxisID: "LEFT",
+      }
+    ]
+
+  },
+  options: options1
+
+})
+
+
+// Fetching data and putting it on graph
+function fetch_data(){
+  reset_data()
+  live_data.checked = false
+
+  let path = "/statistics/data?"
+  if(cb_water.checked) {
+    path += "water=1&"
+  }
+  if(cb_moisture.checked) {
+    path += "moisture=1&"
+  }
+  if(cb_light.checked) {
+    path += "light=1&"
+  }
+
+  if(start_time.value !== undefined && end_time.value !== undefined){
+    path += "start=" + new Date(start_time.value).getTime()
+    path += "&end=" + new Date(end_time.value).getTime()
+  }
+  //console.log(path)
+  fetch(path)
+  .then((res) => {
+    //console.log(res)
+    return res.json()
+  })
+  .then((res) => {
+
+  if(cb_water.checked && res[0].water) {
+    graph.data.datasets[0].data = res.map(item => item.water)
+  }
+  if(cb_moisture.checked && res[0].moisture){
+    graph.data.datasets[1].data = res.map(item => item.moisture)
+  }
+  if(cb_light.checked && res[0].light){
+    graph.data.datasets[2].data = res.map(item => item.light)
+  }
+  time_stamps = []
+  time_stamps = res.map(item => new Date(item.time_stamp))
+  graph.data.labels = time_stamps
+  graph.update()
+  })
+
+  .catch((e) => {
+    console.log(e)
+  })
+}
+
+const cb_water = document.getElementById("show-water")
+const cb_moisture = document.getElementById("show-moisture")
+const cb_light = document.getElementById("show-light")
+
+let checkboxes = [cb_water, cb_moisture, cb_light]
+// Adding eventlisteners for the checkboxes to hide or show data on the graph
+for(let i = 0; i < checkboxes.length; i++){
+  checkboxes[i].addEventListener("click", (event) =>{
+    if(checkboxes[i].checked)
+      graph.data.datasets[i].hidden = false
+    else
+      graph.data.datasets[i].hidden = true
+
+    graph.update()
+  })
+}
+
+// Handling message event
+mywsServer.onmessage = function(event){
+
+  if(!live_data.checked){
+    return
+  }
+  const { data } = event
+  let d = JSON.parse(data)
+
+  let date = new Date()
+  if(d.errors != 0){
+    if(d.errors == 1){
+      document.querySelector('#error').textContent = 'Sensor error!!!'
+    }
+    else {
+      document.querySelector('#error').textContent = 'Water level too low!!!'
+    }
+  }
+  else {
+    document.querySelector('#error').textContent = ''
+  }
+  if(d.water !== undefined){
+    water.push(d.water)
+    if(water.length > 100) water.shift()
+  }
+
+  if(d.moisture !== undefined){
+    moisture.push(d.moisture)
+    if(moisture.length > 100) moisture.shift()
+  }
+
+  if(d.light !== undefined){
+    light.push(d.light)
+    if(light.length > 100) light.shift()
+  }
+  if(date !== undefined){
+    time_stamps.push(date)
+    if(time_stamps.length > 100) time_stamps.shift()
+  }
+  graph.update()
+}
+
+// Function for updating the select menu choices
+function updateSelectOptions() {
+    fetch('/selectData')
+        .then(response => response.json())
+        .then(data => {
+            const selectElement = document.getElementById('profileNames')
+            // Clear existing options
+            selectElement.innerHTML = ''
+
+            data.forEach(profile => {
+                const option = document.createElement('option')
+                option.value = profile.name
+                option.textContent = profile.name
+                selectElement.appendChild(option)
+            })
+        })
+        .catch(error => console.error(error))
+  }
+  // Run the function on page load
+  updateSelectOptions()
+  document.getElementById('profileNames').addEventListener('click', function() {
+      updateSelectOptions()
+  })
+
+  // Add event when profile is changed on the select menu
+  document.getElementById('profileNames').addEventListener('change', function() {
+            const selectedName = document.getElementById('profileNames').value
+
+            fetch(`/profileData?name=${selectedName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const profile = data
+                    console.log(profile[0])
+                    reset_data()
+                    graph.data.datasets[0].data = water
+                    graph.data.datasets[1].data = moisture
+                    graph.data.datasets[2].data = light
+                    graph.data.labels = time_stamps
+                })
+                .catch(error => console.error(error))
+                setTimeout(() => {
+                    updateSelectedProfile()
+                }, 100)
+        })
+        // Function to insert the current profile on the page
+        function updateSelectedProfile() {
+        fetch('/selectedProfile')
+            .then(response => response.json())
+            .then(data => {
+                const selectedProfile = document.getElementById('selectedProfile')
+                selectedProfile.textContent = data.name || 'No selected profile'
+            })
+            .catch(error => console.error(error))
+        }
+        // Run this function on page load
+        updateSelectedProfile()
+    </script>
+</html>

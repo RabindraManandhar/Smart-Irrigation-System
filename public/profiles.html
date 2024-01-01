@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profiles</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class=navbar>
+        <div class=logo>
+            <img src="placeholder.png" alt="Plant png">
+            <div>
+              <a href="http://localhost:3000" class="home">TeleFarm</a>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="dropbtn">Profiles</button>
+            <div class="dropdown-content">
+              <select id="profileNames">
+              </select>
+            </div>
+        </div>
+        <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
+        <a href="http://localhost:3000/statistics" class="statistics">Statistics</a>
+    </div>
+    
+    <div class="profile-view">
+        <h1>User Profiles</h1>
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput"><br><br>
+
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+        <option value="0">Manual</option>
+        <option value="1">Automatic</option>
+    </select><br><br>
+
+    <label for="moistureRange">Target Moisture (%):</label>
+    <input type="range" id="moistureRange" min="0" max="100"><span id="moistureValue"></span><br><br>
+
+    <label for="waterTimingInput">Water Timing:</label>
+    <input type="time" id="waterTimingInput"><br><br>
+
+    <label for="amountOfWaterInput">Amount of Water (mL):</label>
+    <input type="number" id="amountOfWaterInput"><br><br>
+
+    <button id="createProfileBtn">Create Profile</button>
+    <button id="deleteProfileBtn">Delete Profile</button>
+    <button id="modifyProfileBtn">Modify Profile</button>
+    <p id="notificationMessage"></p>
+
+    <script>
+        'use strict'
+        // Function to update the select menu
+        function updateSelectOptions() {
+            fetch('/selectData')
+                .then(response => response.json())
+                .then(data => {
+                    const selectElement = document.getElementById('profileNames')
+                    // Clear existing options
+                    selectElement.innerHTML = ''
+
+                    data.forEach(profile => {
+                        const option = document.createElement('option')
+                        option.value = profile.name
+                        option.textContent = profile.name
+                        selectElement.appendChild(option)
+                    })
+                })
+                .catch(error => console.error(error))
+}
+
+        const profileNamesSelect = document.getElementById('profileNames')
+        const profileDataDiv = document.getElementById('profileData')
+        const moistureRange = document.getElementById('moistureRange')
+        const moistureValue = document.getElementById('moistureValue')
+        const deleteProfileBtn = document.getElementById('deleteProfileBtn')
+        const modifyProfileBtn = document.getElementById('modifyProfileBtn')
+
+        // On event change, send data through profileData route. The purpose is to update values on the backend
+        profileNamesSelect.addEventListener('change', function() {
+            const selectedName = profileNamesSelect.value
+
+            fetch(`/profileData?name=${selectedName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const profile = data
+                    document.getElementById('nameInput').value = profile[0].name
+                    document.getElementById('modeSelect').value = profile[0].auto.toString()
+                    document.getElementById('moistureRange').value = profile[0].target_moisture
+                    document.getElementById('waterTimingInput').value = profile[0].water_timing
+                    document.getElementById('amountOfWaterInput').value = profile[0].amount_of_water
+                    moistureValue.textContent = moistureRange.value
+                })
+                .catch(error => console.error(error))
+                // The reason for the delay is for everything to keep up. Otherwise it will receive empty values
+                setTimeout(() => {
+                    updateSelectedProfile()
+                }, 100)
+                })
+        // Check if moistureRange is changed
+        moistureRange.addEventListener('input', function() {
+            moistureValue.textContent = moistureRange.value
+        })
+
+        const createProfileBtn = document.getElementById('createProfileBtn')
+
+        // CreateProfileButton event, tries to create a profile with the given parameters
+        createProfileBtn.addEventListener('click', function() {
+            const nameInput = document.getElementById('nameInput').value
+            const modeSelect = document.getElementById('modeSelect').value
+            const moistureRange = document.getElementById('moistureRange').value
+            const waterTimingInput = document.getElementById('waterTimingInput').value
+            const amountOfWaterInput = document.getElementById('amountOfWaterInput').value
+            const profileData = {
+                name: nameInput,
+                auto: parseInt(modeSelect),
+                target_moisture: parseInt(moistureRange),
+                water_timing: waterTimingInput,
+                amount_of_water: parseInt(amountOfWaterInput)
+            }
+
+            fetch('/createProfile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(profileData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Profile created successfully:', data)
+                const notificationMessage = document.getElementById('notificationMessage')
+                if(data.error) {
+                    notificationMessage.textContent = data.error
+                }
+                else {
+                    notificationMessage.textContent = 'Profile created successfully'
+                }            
+            })
+            .catch(error => console.error('Error creating profile:', error))
+
+        })
+        // Run updateSelectOptions on page load
+        updateSelectOptions()
+        profileNamesSelect.addEventListener('click', function() {
+            updateSelectOptions()
+        })
+        // Profile deletation event, tries to delete a profile with the given name
+        deleteProfileBtn.addEventListener('click', function() {
+            const nameInput = document.getElementById('nameInput').value
+
+            fetch(`/deleteProfile?name=${nameInput}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Give appropriate message on the page
+                if (data.success) {
+                    notificationMessage.textContent = 'Profile successfully deleted'
+                } else {
+                    notificationMessage.textContent = 'Profile not found'
+                }
+            })
+            .catch(error => console.error('Error deleting profile:', error))
+            // The reason for the delay is for everything to keep up. Otherwise it will receive empty values
+            setTimeout(() => {
+                    updateSelectedProfile()
+            }, 100)
+        })
+        // Profile modification button event, tries to change the current selected profile according to the given parameters
+        modifyProfileBtn.addEventListener('click', function() {
+        const nameInput = document.getElementById('nameInput').value
+        const modeSelect = document.getElementById('modeSelect').value
+        const moistureRange = document.getElementById('moistureRange').value
+        const waterTimingInput = document.getElementById('waterTimingInput').value
+        const amountOfWaterInput = document.getElementById('amountOfWaterInput').value
+        const profileData = {
+            name: nameInput,
+            auto: parseInt(modeSelect),
+            target_moisture: parseInt(moistureRange),
+            water_timing: waterTimingInput,
+            amount_of_water: parseInt(amountOfWaterInput)
+        }
+
+        fetch('/modifyProfile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(profileData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Profile modified successfully:', data)
+            const notificationMessage = document.getElementById('notificationMessage')
+            if(data.error) {
+                notificationMessage.textContent = data.error
+            } else {
+                notificationMessage.textContent = 'Profile modified successfully'
+            }
+        })
+        .catch(error => console.error('Error modifying profile:', error))
+        // The reason for the delay is for everything to keep up. Otherwise it will receive empty values
+        setTimeout(() => {
+                    updateSelectedProfile()
+        }, 100)
+    })
+    // Function to insert the current profile on the page
+    function updateSelectedProfile() {
+    fetch('/selectedProfile')
+        .then(response => response.json())
+        .then(data => {
+            const selectedProfile = document.getElementById('selectedProfile')
+            selectedProfile.textContent = data.name || 'No selected profile'
+        })
+        .catch(error => console.error(error))
+    }
+    // Run UpdateSelectProfile on pageload
+    updateSelectedProfile()
+
+    </script>
+</body>
+</html>
